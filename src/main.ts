@@ -26,6 +26,7 @@ import { Pane } from "tweakpane";
     await game.monsterManager.init();
   }
 
+  // --- Tweakpane Monster Spawn Rate Control ---
   const pane = new Pane();
 
   const params = {
