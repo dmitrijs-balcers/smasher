@@ -4,6 +4,7 @@ import { Player } from "./Player";
 export type Monster = {
   sprite: Sprite;
   speed: number;
+  radius: number;
 };
 
 export class MonsterManager {
@@ -69,20 +70,52 @@ export class MonsterManager {
     const monsterSprite = new Sprite(this.monsterTexture);
     monsterSprite.anchor.set(0.5);
     monsterSprite.position.set(x, y);
+    // Use half the width as radius for circle collision
+    const radius = monsterSprite.width / 2;
     this.app.stage.addChild(monsterSprite);
-    this.monsters.push({ sprite: monsterSprite, speed: this.monsterSpeed });
+    this.monsters.push({
+      sprite: monsterSprite,
+      speed: this.monsterSpeed,
+      radius,
+    });
   }
 
   update() {
-    // Move monsters toward player
+    // Move monsters toward player, but avoid overlapping player and other monsters
     const playerPos = this.player.getPosition();
-    this.monsters.forEach((monster) => {
+    const playerRadius = this.player.sprite.width / 2;
+
+    this.monsters.forEach((monster, i) => {
       const dx = playerPos.x - monster.sprite.x;
       const dy = playerPos.y - monster.sprite.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      if (dist > 0) {
-        monster.sprite.x += (dx / dist) * monster.speed;
-        monster.sprite.y += (dy / dist) * monster.speed;
+
+      // Avoid overlapping player
+      if (dist < monster.radius + playerRadius) {
+        // Too close to player, don't move closer
+        return;
+      }
+
+      // Avoid overlapping other monsters
+      let moveAllowed = true;
+      const nextX = monster.sprite.x + (dx / (dist || 1)) * monster.speed;
+      const nextY = monster.sprite.y + (dy / (dist || 1)) * monster.speed;
+
+      for (let j = 0; j < this.monsters.length; j++) {
+        if (i === j) continue;
+        const other = this.monsters[j];
+        const odx = nextX - other.sprite.x;
+        const ody = nextY - other.sprite.y;
+        const odist = Math.sqrt(odx * odx + ody * ody);
+        if (odist < monster.radius + other.radius) {
+          moveAllowed = false;
+          break;
+        }
+      }
+
+      if (moveAllowed && dist > 0) {
+        monster.sprite.x = nextX;
+        monster.sprite.y = nextY;
       }
     });
   }
