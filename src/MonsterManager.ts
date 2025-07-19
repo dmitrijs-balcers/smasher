@@ -89,6 +89,8 @@ export class MonsterManager {
     const monsterSprite = new Sprite(this.monsterTexture);
     monsterSprite.anchor.set(0.5);
     monsterSprite.position.set(x, y);
+    // Randomly tint the monster to a different color
+    monsterSprite.tint = Math.random() * 0xffffff;
     // Use half the width as radius for circle collision
     const radius = monsterSprite.width / 2;
     this.app.stage.addChild(monsterSprite);
