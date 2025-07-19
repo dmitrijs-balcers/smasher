@@ -2,8 +2,11 @@ import { Application, Sprite, Assets } from "pixi.js";
 import { Player } from "./Player";
 
 export type Monster = {
+  /** The visual representation of the monster */
   sprite: Sprite;
+  /** Movement speed of the monster in pixels per frame */
   speed: number;
+  /** Collision radius used for hit detection and movement logic */
   radius: number;
 };
 
@@ -13,8 +16,24 @@ export class MonsterManager {
   private monsters: Monster[] = [];
   private monsterTexture: Sprite["texture"] | null = null;
   private monsterSpeed: number = 2;
-  private spawnInterval: number = 2000; // ms
+  private _spawnInterval: number = 1000; // ms
   private spawnTimer: number | undefined;
+
+  get spawnInterval(): number {
+    return this._spawnInterval;
+  }
+
+  set spawnInterval(value: number) {
+    if (typeof value === "number" && value > 0) {
+      this._spawnInterval = value;
+      this.restartSpawning();
+    }
+  }
+
+  private restartSpawning() {
+    this.stopSpawning();
+    this.startSpawning();
+  }
 
   constructor(app: Application, player: Player) {
     this.app = app;
@@ -31,7 +50,7 @@ export class MonsterManager {
   private startSpawning() {
     this.spawnTimer = window.setInterval(
       () => this.spawnMonster(),
-      this.spawnInterval,
+      this._spawnInterval,
     );
   }
 
