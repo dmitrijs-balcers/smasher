@@ -1,4 +1,11 @@
-import { Application, Assets, Sprite, Text, TextStyle } from "pixi.js";
+import {
+  Application,
+  Assets,
+  Sprite,
+  Text,
+  TextStyle,
+  Container,
+} from "pixi.js";
 
 (async () => {
   // Create a new application
@@ -16,6 +23,18 @@ import { Application, Assets, Sprite, Text, TextStyle } from "pixi.js";
   // --- Player Health ---
   let playerHealth = 100;
   const maxHealth = 100;
+
+  // --- Monster System ---
+  type Monster = {
+    sprite: Sprite;
+    speed: number;
+  };
+  const monsters: Monster[] = [];
+  const monsterSpeed = 2;
+  const monsterSpawnInterval = 2000; // ms
+
+  // Load monster texture (reuse bunny for now)
+  const monsterTexture = await Assets.load("/assets/bunny.png");
 
   // Health regeneration: increase by 1 every second, up to maxHealth
   setInterval(() => {
@@ -112,5 +131,50 @@ import { Application, Assets, Sprite, Text, TextStyle } from "pixi.js";
 
     // Update health UI in case health changes elsewhere
     healthText.text = `Health: ${playerHealth}`;
+
+    // --- Monster Movement ---
+    monsters.forEach((monster) => {
+      // Move monster toward player
+      const dx = bunny.x - monster.sprite.x;
+      const dy = bunny.y - monster.sprite.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist > 0) {
+        monster.sprite.x += (dx / dist) * monster.speed;
+        monster.sprite.y += (dy / dist) * monster.speed;
+      }
+    });
   });
+
+  // --- Monster Spawning ---
+  function spawnMonster() {
+    // Spawn at random edge
+    const edge = Math.floor(Math.random() * 4); // 0: top, 1: right, 2: bottom, 3: left
+    let x = 0,
+      y = 0;
+    switch (edge) {
+      case 0: // top
+        x = Math.random() * app.screen.width;
+        y = 0;
+        break;
+      case 1: // right
+        x = app.screen.width;
+        y = Math.random() * app.screen.height;
+        break;
+      case 2: // bottom
+        x = Math.random() * app.screen.width;
+        y = app.screen.height;
+        break;
+      case 3: // left
+        x = 0;
+        y = Math.random() * app.screen.height;
+        break;
+    }
+    const monsterSprite = new Sprite(monsterTexture);
+    monsterSprite.anchor.set(0.5);
+    monsterSprite.position.set(x, y);
+    app.stage.addChild(monsterSprite);
+    monsters.push({ sprite: monsterSprite, speed: monsterSpeed });
+  }
+
+  setInterval(spawnMonster, monsterSpawnInterval);
 })();
