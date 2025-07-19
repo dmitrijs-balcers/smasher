@@ -16,8 +16,11 @@ export class MonsterManager {
   private monsters: Monster[] = [];
   private monsterTexture: Sprite["texture"] | null = null;
   private monsterSpeed: number = 2;
-  private _spawnInterval: number = 1000; // ms
+  private _spawnInterval: number = 2000; // ms
   private spawnTimer: number | undefined;
+
+  // Track last damage time for each monster
+  private monsterDamageTimestamps: Map<Monster, number> = new Map();
 
   get spawnInterval(): number {
     return this._spawnInterval;
@@ -94,25 +97,33 @@ export class MonsterManager {
     // Use half the width as radius for circle collision
     const radius = monsterSprite.width / 2;
     this.app.stage.addChild(monsterSprite);
-    this.monsters.push({
+    const monster = {
       sprite: monsterSprite,
       speed: this.monsterSpeed,
       radius,
-    });
+    };
+    this.monsters.push(monster);
+    this.monsterDamageTimestamps.set(monster, 0);
   }
 
   update() {
     // Move monsters toward player, but avoid overlapping player and other monsters
     const playerPos = this.player.getPosition();
     const playerRadius = this.player.sprite.width / 2;
+    const now = performance.now();
 
     this.monsters.forEach((monster, i) => {
       const dx = playerPos.x - monster.sprite.x;
       const dy = playerPos.y - monster.sprite.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
 
-      // Avoid overlapping player
+      // Damage player if touching, but only once per second per monster
       if (dist < monster.radius + playerRadius) {
+        const lastDamage = this.monsterDamageTimestamps.get(monster) ?? 0;
+        if (now - lastDamage >= 1000) {
+          this.player.takeDamage(1);
+          this.monsterDamageTimestamps.set(monster, now);
+        }
         // Too close to player, don't move closer
         return;
       }
