@@ -1,10 +1,12 @@
 import { Application, Assets } from "pixi.js";
 import { Game } from "./Game";
+import { initDevtools } from "@pixi/devtools";
 
 // Entry point for the game
 (async () => {
   // Create a new PixiJS application
   const app = new Application();
+  initDevtools({ app });
 
   // Initialize the application
   await app.init({ background: "#1099bb", resizeTo: window });
