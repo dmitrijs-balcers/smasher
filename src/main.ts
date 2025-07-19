@@ -1,4 +1,4 @@
-import { Application, Assets, Sprite } from "pixi.js";
+import { Application, Assets, Sprite, Text, TextStyle } from "pixi.js";
 
 (async () => {
   // Create a new application
@@ -12,6 +12,40 @@ import { Application, Assets, Sprite } from "pixi.js";
 
   // Load the bunny texture
   const texture = await Assets.load("/assets/bunny.png");
+
+  // --- Player Health ---
+  let playerHealth = 100;
+  const maxHealth = 100;
+
+  // Health regeneration: increase by 1 every second, up to maxHealth
+  setInterval(() => {
+    if (playerHealth < maxHealth) {
+      playerHealth = Math.min(maxHealth, playerHealth + 1);
+    }
+  }, 1000);
+
+  // Health UI
+  const healthStyle = new TextStyle({
+    fontFamily: "Arial",
+    fontSize: 28,
+    fill: "#ffffff",
+    stroke: "#000000",
+  });
+  const healthText = new Text({
+    style: healthStyle,
+    text: `Health: ${playerHealth}`,
+  });
+  healthText.anchor.set(0, 0);
+  healthText.position.set(16, 16);
+  app.stage.addChild(healthText);
+
+  // Simulate health loss for demo: press 'H' to lose 10 health
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "h" || e.key === "H") {
+      playerHealth = Math.max(0, playerHealth - 10);
+      healthText.text = `Health: ${playerHealth}`;
+    }
+  });
 
   // Create a bunny Sprite
   const bunny = new Sprite(texture);
@@ -75,5 +109,8 @@ import { Application, Assets, Sprite } from "pixi.js";
       bunny.height / 2,
       Math.min(app.screen.height - bunny.height / 2, bunny.y),
     );
+
+    // Update health UI in case health changes elsewhere
+    healthText.text = `Health: ${playerHealth}`;
   });
 })();
